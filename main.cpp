@@ -113,6 +113,10 @@ namespace CPU {
             return val;
         }
 
+        bool getBit(int idx) {
+            return (val >> idx) & 1;
+        }
+
         void operator=(const Reg8& other) { val = other.val; }
         void operator=(const int& other) { val = uint8_t(other); }
 
@@ -275,12 +279,26 @@ namespace CPU {
             return flags;
         }
 
-        void operator++() {
+        uint16_t operator++() {
             *this = uint16_t(this->getVal() + 1);
+            return this->getVal();
         }
 
-        void operator--() {
+        uint16_t operator--() {
             *this = uint16_t(this->getVal() - 1);
+            return this->getVal();
+        }
+
+        uint16_t operator++(int) {
+            uint16_t oldVal = this->getVal();
+            *this = uint16_t(this->getVal() + 1);
+            return oldVal;
+        }
+
+        uint16_t operator--(int) {
+            uint16_t oldVal = this->getVal();
+            *this = uint16_t(this->getVal() - 1);
+            return oldVal;
         }
     };
 
@@ -291,6 +309,10 @@ namespace CPU {
         Reg16 AF, BC, DE, HL;
         uint16_t SP, PC;
         int wait = 0;
+        const int Zidx = 7;
+        const int Nidx = 6;
+        const int Hidx = 5;
+        const int Cidx = 4;
     public:
         LR35902(Bus& b) : bus(b), AF(A, F), BC(B, C), DE(D, E), HL(H, L), SP(0), PC(0) {}
         int read(const uint16_t& addr, int n = 1) {
@@ -308,6 +330,10 @@ namespace CPU {
 
         uint8_t write(uint16_t addr, uint8_t val) {
             this->bus.write(addr, val);
+        }
+
+        uint8_t write(uint16_t addr, Reg8& val) {
+            this->bus.write(addr, val.getVal());
         }
 
         uint8_t write(Reg16& addr, Reg8& val) {
@@ -345,8 +371,8 @@ namespace CPU {
                     uint16_t addr = read(pc(2), 2);
                     write(addr, SP & 0xff);
                     write(addr + 1, (SP >> 8) & 0xff);
-                    break; /*  */
-                }
+                    break;
+                } /*  */
                 case 0x09:  f(HL += BC, 0b0011, 0b0000, 0b0100);    break; /*  */
                 case 0x0a:  A = read(BC.getVal());                  break; /*  */
                 case 0x0b:  --BC;                                   break; /*  */
@@ -354,6 +380,45 @@ namespace CPU {
                 case 0x0d:  f(B -= 1, 0b1010, 0b0100, 0b0000);      break; /*  */
                 case 0x0e:  C = read(pc(1));                        break; /*  */
                 case 0x0f:  f(A.RRC(), 0b0001, 0b0000, 0b1110);     break; /*  */
+
+                case 0x10: {                                        break;} /*  */
+                case 0x11: {DE = read(pc(2), 2);                    break;} /*  */
+                case 0x12: {write(DE, A);                           break;} /*  */
+                case 0x13: {++DE;                                   break;} /*  */
+                case 0x14: {f(D += 1, 0xA, 0x0, 0x4);               break;} /*  */
+                case 0x15: {f(D -= 1, 0xA, 0x4, 0x0);               break;} /*  */
+                case 0x16: {D = read(pc(1));                        break;} /*  */
+                case 0x17: {f(A.RL(F.getBit(Cidx)), 0x1, 0x0, 0xE); break;} /*  */
+                case 0x18: {PC += signed(read(pc(1)));              break;} /*  */
+                case 0x19: {f(HL += DE, 0x3, 0x0, 0x4);             break;} /*  */
+                case 0x1a: {A = read(DE.getVal());                  break;} /*  */
+                case 0x1b: {--DE;                                   break;} /*  */
+                case 0x1c: {f(E += 1, 0xA, 0x0, 0x4);               break;} /*  */
+                case 0x1d: {f(E -= 1, 0xA, 0x4, 0x0);               break;} /*  */
+                case 0x1e: {E = read(pc(1));                        break;} /*  */
+                case 0x1f: {f(A.RR(F.getBit(Cidx)), 0x1, 0x0, 0xE); break;} /*  */
+
+                case 0x20: {
+                    if(!F.getBit(Zidx)){
+                        PC += signed(read(pc(1)));
+                    }
+                    break;
+                } /*  */
+                case 0x21: {HL = read(pc(2), 2);                    break;} /*  */
+                case 0x22: {write(HL++, A);                         break;} /*  */
+                case 0x23: {++HL;                                   break;} /*  */
+                case 0x24: {f(H += 1, 0xA, 0x0, 0x4);               break;} /*  */
+                case 0x25: {f(H -= 1, 0xA, 0x4, 0x0);               break;} /*  */
+                case 0x26: {H = read(pc(1));                        break;} /*  */
+                case 0x27: {                                        break;} /*  */
+                case 0x28: {                                        break;} /*  */
+                case 0x29: {f(HL += HL, 0x3, 0x0, 0x4);             break;} /*  */
+                case 0x2a: {A = read(DE++);                         break;} /*  */
+                case 0x2b: {--HL;                                   break;} /*  */
+                case 0x2c: {f(L += 1, 0xA, 0x0, 0x4);               break;} /*  */
+                case 0x2d: {f(L -= 1, 0xA, 0x4, 0x0);               break;} /*  */
+                case 0x2e: {L = read(pc(1));                        break;} /*  */
+                case 0x2f: {                                        break;} /*  */
 
                 default: printf("Unknown opcode - %d\n", opcode);   break; /* Unknown opcode */
             }
