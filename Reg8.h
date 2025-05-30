@@ -28,6 +28,9 @@ public:
     uint8_t operator-=(const Reg8& other);
     uint8_t operator-=(int other);
 
+    uint8_t adc(const Reg8& other, bool carry_in);
+    uint8_t sbc(const Reg8& other, bool carry_in);
+
     // bitwise and, xor, or (with Reg8 and uint8_t)
     uint8_t operator&=(const Reg8& other);
     uint8_t operator^=(const Reg8& other);

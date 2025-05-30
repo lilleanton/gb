@@ -11,8 +11,8 @@ uint8_t ROMBlock::read(uint16_t addr) {
     return data[addr - offset];
 }
 
-bool ROMBlock::write(uint16_t /*addr*/, uint8_t /*val*/) {
-    return false;
+bool ROMBlock::write(uint16_t addr, uint8_t val) {
+    return data[addr - offset] = val;
 }
 
 int ROMBlock::getMemtype() {
@@ -31,8 +31,7 @@ uint8_t RAMBlock::read(uint16_t addr) {
 }
 
 bool RAMBlock::write(uint16_t addr, uint8_t val) {
-    data[addr - offset] = val;
-    return true;
+    return data[addr - offset] = val;
 }
 
 int RAMBlock::getMemtype() {
@@ -43,8 +42,9 @@ int RAMBlock::getMemtype() {
 Bus::Bus() = default;
 
 void Bus::mapRange(uint16_t start, uint16_t end, MemoryDevice* dev) {
-    for (uint16_t i = start; i <= end; ++i)
+    for (int i = start; i <= end; ++i) {
         map[i] = dev;
+    }
 }
 
 uint32_t Bus::read(uint16_t addr, int n) {
@@ -64,4 +64,11 @@ void Bus::write(uint16_t addr, uint8_t val) {
 
 int Bus::getMemtype(uint16_t addr) {
     return map[addr] ? map[addr]->getMemtype() : MEM_TYPE_DNE;
+}
+
+bool Bus::isMapFull() {
+    for (const auto& dev : map) {
+        if (dev == nullptr) return false;
+    }
+    return true;
 }

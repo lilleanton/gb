@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <array>
 #include <stdexcept>
+#include <iostream>
 
 // memory types
 enum MemType {
@@ -61,8 +62,9 @@ private:
 public:
     Bus();
 
-    void     mapRange(uint16_t start, uint16_t end, MemoryDevice* dev);
-    uint32_t read(uint16_t addr, int n = 1);
-    void     write(uint16_t addr, uint8_t val);
-    int      getMemtype(uint16_t addr);
+    void        mapRange(uint16_t start, uint16_t end, MemoryDevice* dev);
+    uint32_t    read(uint16_t addr, int n = 1);
+    void        write(uint16_t addr, uint8_t val);
+    int         getMemtype(uint16_t addr);
+    bool        isMapFull();
 };

@@ -24,6 +24,7 @@ public:
     // 16-bit add: updates registers and returns flag byte (H and C)
     uint8_t operator+=(const Reg16& other);
     uint8_t operator+=(uint16_t other);
+    uint8_t operator+=(int8_t offset);
 
     // increments/decrements
     uint16_t operator++();    // prefix

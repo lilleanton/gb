@@ -1,4 +1,5 @@
 #include "Reg8.h"
+#include <stdio.h>
 
 namespace CPU {
 
@@ -23,7 +24,7 @@ void Reg8::operator=(int other) {
     val = uint8_t(other);
 }
 
-// arithmetic
+// Arithmetic. ADD, SUB, ADC, and SBC
 uint8_t Reg8::operator+(const Reg8& other) const {
     return uint8_t(val + other.val);
 }
@@ -68,35 +69,69 @@ uint8_t Reg8::operator-=(int other) {
     return *this -= Reg8(uint8_t(other));
 }
 
+uint8_t Reg8::adc(const Reg8& other, bool carry_in) {
+    uint8_t a = val;
+    uint8_t b = other.val;
+    uint16_t total = uint16_t(a) + uint16_t(b) + uint16_t(carry_in);
+    uint8_t  res   = uint8_t(total);
+
+    uint8_t flags = 0;
+    if (res == 0)                                    flags |= 0x80;            // Z
+    /* N = 0 for addition */
+    if ( ((a & 0xF) + (b & 0xF) + (carry_in?1:0)) > 0xF ) 
+                                                     flags |= 0x20;            // H
+    if (total > 0xFF)                                flags |= 0x10;            // C
+
+    val = res;
+    return flags;
+}
+
+uint8_t Reg8::sbc(const Reg8& other, bool carry_in) {
+    uint8_t a = val;
+    uint8_t b = other.val;
+    int16_t diff = int16_t(a) - int16_t(b) - int16_t(carry_in);
+    uint8_t res   = uint8_t(diff);
+
+    uint8_t flags = 0;
+    if (res == 0)                                   flags |= 0x80;             // Z
+    flags |= 0x40;                                  // N = 1 for subtraction
+    if ( (a & 0xF) < ((b & 0xF) + (carry_in?1:0)) ) flags |= 0x20;             // H (half-borrow)
+    if (diff < 0)                                   flags |= 0x10;             // C (full borrow)
+
+    val = res;
+    return flags;
+}
+
+
 // bitwise
 uint8_t Reg8::operator&=(const Reg8& other) {
     val &= other.val;
-    return (val >> 7) & 1; 
+    return (val == 0) << 7; 
 }
 
 uint8_t Reg8::operator^=(const Reg8& other) {
     val ^= other.val;
-    return (val >> 7) & 1; 
+    return (val == 0) << 7; 
 }
 
 uint8_t Reg8::operator|=(const Reg8& other) {
     val |= other.val;
-    return (val >> 7) & 1; 
+    return (val == 0) << 7; 
 }
 
 uint8_t Reg8::operator&=(uint8_t other) {
     val &= other;
-    return (val >> 7) & 1; 
+    return (val == 0) << 7; 
 }
 
 uint8_t Reg8::operator^=(uint8_t other) {
     val ^= other;
-    return (val >> 7) & 1; 
+    return (val == 0) << 7; 
 }
 
 uint8_t Reg8::operator|=(uint8_t other) {
     val |= other;
-    return (val >> 7) & 1; 
+    return (val == 0) << 7; 
 }
 
 // rotate
@@ -146,21 +181,21 @@ uint8_t Reg8::SRA() {
     bool msb   = val & 0x80;
     val = uint8_t((val >> 1) | (msb ? 0x80 : 0));
 
-    return uint8_t((val != 0) << 7) | uint8_t(carry << 4);
+    return uint8_t((val == 0) << 7) | uint8_t(carry << 4);
 }
 
 uint8_t Reg8::SRL() {
     bool carry = val & 1;
     val = uint8_t(val >> 1);
 
-    return uint8_t((val != 0) << 7) | uint8_t(carry << 4);
+    return uint8_t((val == 0) << 7) | uint8_t(carry << 4);
 }
 
 uint8_t Reg8::SLA() {
     bool carry = (val & 0x80) != 0;
     val = uint8_t(val << 1);
 
-    return uint8_t((val != 0) << 7) | uint8_t(carry << 4);
+    return uint8_t((val == 0) << 7) | uint8_t(carry << 4);
 }
 
 } // namespace CPU

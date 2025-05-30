@@ -30,6 +30,8 @@ public:
     void f(uint8_t ZHNC, uint8_t ZHNCmask, uint8_t on, uint8_t off);
     void setRegisterStateJSON(json& data);
     bool compareRegisterStateJSON(json& final);
+    void printState();
     void insExecute();
+    void CBExtension();
 };
 }
