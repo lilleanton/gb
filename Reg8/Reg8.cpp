@@ -134,6 +134,14 @@ uint8_t Reg8::operator|=(uint8_t other) {
     return (val == 0) << 7; 
 }
 
+void Reg8::setBit(uint8_t idx) {
+    val |= (1 << idx);
+}
+
+void Reg8::resetBit(uint8_t idx) {
+    val &= ~(1 << idx);
+}
+
 // rotate
 uint8_t Reg8::RLC() {
     bool carry = (val & 0x80) != 0;

@@ -2,7 +2,7 @@
 #pragma once
 
 #include <cstdint>
-#include "Reg8.h"
+#include "../Reg8/Reg8.h"
 
 namespace CPU {
 

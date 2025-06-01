@@ -1,3 +1,7 @@
+#include "testing.h"
+
+namespace Testing {
+
 bool compareCpuState(CPU::LR35902& cpu, json& state) {
     bool match = true;
 
@@ -9,7 +13,7 @@ bool compareCpuState(CPU::LR35902& cpu, json& state) {
     };
 
     if(!cpu.compareRegisterStateJSON(state))
-        return false;
+        match = false;
 
     for (const auto& ramEntry : state["ram"]) {
         uint16_t addr = ramEntry[0].get<uint16_t>();
@@ -34,16 +38,16 @@ void setMachineStateJSON(Bus& bus, CPU::LR35902& cpu, json& state) {
     }
 }
 
-void testOpcode(Bus& bus, CPU::LR35902& cpu, std::string opcode, int numToTest = 1) {
+void testOpcode(Bus& bus, CPU::LR35902& cpu, std::string opcode, int numToTest) {
     std::fstream f(std::format("V1/{}.json", opcode));
     json data = json::parse(f);
 
     for(int i = 0; i < numToTest; i++) {
         setMachineStateJSON(bus, cpu, data[i]["initial"]);
-        cpu.insExecute();
+        //cpu.insCycle();
 
-        if(compareCpuState(cpu, data[i]["final"])){
-           // printf("(%s)-test number %d, success\n", opcode.c_str(), i);
+        if(compareCpuState(cpu, data[i]["initial"])){
+            // printf("(%s)-test number %d, success\n", opcode.c_str(), i);
         } else {
             printf("Failed at index %d for opcode %s\n", i, opcode.c_str());
             break;
@@ -53,6 +57,7 @@ void testOpcode(Bus& bus, CPU::LR35902& cpu, std::string opcode, int numToTest =
 
 void test1byteOpcodes(Bus& bus, CPU::LR35902& cpu) {
     for(int i = 0x00; i <= 0xff; i++) {
+        cpu.wait = 0;
         if(
             std::format("{:02x}", i) == "cb"
             || std::format("{:02x}", i) == "d3"
@@ -73,7 +78,9 @@ void test1byteOpcodes(Bus& bus, CPU::LR35902& cpu) {
 }
 
 void testCBopcodes(Bus& bus, CPU::LR35902& cpu){
-    for(int i = 0x00; i <= 0x2f; i++) {
+    for(int i = 0x00; i <= 0xff; i++) {
         testOpcode(bus, cpu, std::format("cb {:02x}", i), 999);
     }
 }
+
+};

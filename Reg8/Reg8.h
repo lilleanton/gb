@@ -38,6 +38,8 @@ public:
     uint8_t operator&=(uint8_t other);
     uint8_t operator^=(uint8_t other);
     uint8_t operator|=(uint8_t other);
+    void    setBit(uint8_t idx);
+    void    resetBit(uint8_t idx);
 
     // rotate
     uint8_t RLC();
